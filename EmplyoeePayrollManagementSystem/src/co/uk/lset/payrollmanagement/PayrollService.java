@@ -4,7 +4,7 @@ import java.util.*;
 
 public class PayrollService {
     //private static ArrayList<Employee> employees = new ArrayList<>();
-    private static HashMap<Integer, Employee> employeesById= new HashMap<>();
+    private static final HashMap<Integer, Employee> employeesById= new HashMap<>();
     private static final Scanner scanner = new Scanner(System.in);
 
     private static final String BASIC_SALARY = "basic salary";
@@ -99,52 +99,25 @@ public class PayrollService {
         }else{
             Employee employee = employeesById.get(id);
 
-            while(true){ //TODO: Don't think we need this, as when updating we can just ask for employeeID and go and find the employee in the dictionary??
-                System.out.println("Enter \"F\" for Full time Employee or \"P\" for Part time Employee");
-                char fullOrPart = scanner.next().charAt(0);
-                scanner.nextLine();
-
-                if(fullOrPart == 'F'){
-
-                    if(employee instanceof FullTimeEmployee){
-                        updateAttribute(employee, BASIC_SALARY);
-                        updateAttribute(employee, BONUS);
-                        updateAttribute(employee, ALLOWANCE);
-                        updateAttribute(employee, DEDUCTION);
-                    }
-
-
-                    double newSalary = employee.calculateSalary();
-
-                    if(!employeesById.containsKey(id)){
-                        System.out.println("Employee Id is invalid");
-                    }
-
-                    //TODO: Ask Monsur if it's correct?
-                    employee.setBasicSalary(newSalary);
-                    break;
-
-                }else if(fullOrPart == 'P'){
-
-                    if(employee instanceof PartTimeEmployee){
-                        updateAttribute(employee, BASIC_SALARY);
-                        updateAttribute(employee, HOURS_WORKED);
-                    }
-
-
-                    double newSalary = employee.calculateSalary();
-
-                    if(!employeesById.containsKey(id)){
-                        System.out.println("Employee Id is invalid");
-                    }
-
-                    //TODO: Ask Monsur if it's correct?
-                    employee.setBasicSalary(newSalary);
-                    break;
-                }
-
+            if(employee instanceof FullTimeEmployee){
+                updateAttribute(employee, BASIC_SALARY);
+                updateAttribute(employee, BONUS);
+                updateAttribute(employee, ALLOWANCE);
+                updateAttribute(employee, DEDUCTION);
             }
 
+            if(employee instanceof PartTimeEmployee){
+                updateAttribute(employee, BASIC_SALARY);
+                updateAttribute(employee, HOURS_WORKED);
+            }
+
+            double newSalary = employee.calculateSalary();
+
+            if(!employeesById.containsKey(id)){
+                System.out.println("Employee Id is invalid");
+            }
+
+            employee.setBasicSalary(newSalary);
         }
     }
 
@@ -155,7 +128,7 @@ public class PayrollService {
             scanner.nextLine();
 
             if(attributeUpdateChoice == 'Y'){
-                double updatedAttribute = getValidatedEntry("Enter your new " + attributeName);
+                double updatedAttribute = getValidatedInput("Enter your new " + attributeName);
                 switch (attributeName) {
                     case BASIC_SALARY:
                         employee.setBasicSalary(updatedAttribute);
@@ -209,16 +182,20 @@ public class PayrollService {
         System.out.println("Enter your department (for eg: IT/HR/Marketing)");
         String department = scanner.nextLine();
 
+        setBasicSalary(id, name, department);
+    }
+
+    private static void setBasicSalary(int id, String name, String department) {
         while(true){
             System.out.println("Enter \"F\" for Full time Employee or \"P\" for Part time Employee");
             char fullOrPart = scanner.next().charAt(0);
             scanner.nextLine();
 
             if(fullOrPart == 'F'){
-                double basicSalary = getValidatedEntry("Enter your basic salary");
-                double allowance = getValidatedEntry("Enter your allowance");
-                double bonus = getValidatedEntry("Enter your bonus");
-                double deduction = getValidatedEntry("Enter your deduction");
+                double basicSalary = getValidatedInput("Enter your basic salary");
+                double allowance = getValidatedInput("Enter your allowance");
+                double bonus = getValidatedInput("Enter your bonus");
+                double deduction = getValidatedInput("Enter your deduction");
 
                 Employee employee = new FullTimeEmployee(id, name, department, basicSalary, allowance, bonus, deduction);
                 if(employeesById.containsKey(id)){
@@ -228,29 +205,21 @@ public class PayrollService {
                 }
 
                 double salary = employee.calculateSalary();
-//                if(!salaryById.containsKey(id)){
-//                    salaryById.put(id, salary);
-//                }
 
-                //TODO: Ask Monsur if it is correct?
                 if(!employeesById.containsKey(id)){
                     employeesById.get(id).setBasicSalary(salary);
                 }
 
                 break;
             }else if(fullOrPart == 'P'){
-                double basicSalary = getValidatedEntry("Enter your basic salary");
-                double hoursWorked = getValidatedEntry("Enter your hours worked");
+                double basicSalary = getValidatedInput("Enter your basic salary");
+                double hoursWorked = getValidatedInput("Enter your hours worked");
 
                 Employee employee = new PartTimeEmployee(id, name, department, basicSalary, hoursWorked);
                 employeesById.put(id, employee);
 
                 double salary = employee.calculateSalary();
-//                if(!salaryById.containsKey(id)){
-//                    salaryById.put(id, salary);
-//                }
 
-                //TODO: Ask Monsur if it is correct?
                 if(!employeesById.containsKey(id)){
                     employeesById.get(id).setBasicSalary(salary);
                 }
@@ -260,7 +229,6 @@ public class PayrollService {
                 System.out.println("Invalid choice. Please enter F or P");
             }
         }
-
     }
 
     private static int getAndValidateEmployeeId() {
@@ -281,12 +249,18 @@ public class PayrollService {
         return id;
     }
 
-    private static double getValidatedEntry(String msg) {
+    private static double getValidatedInput(String msg) {
         while(true){
             System.out.println(msg);
             try{
                 double input = scanner.nextDouble();
                 scanner.nextLine();
+
+                if(input < 0){
+                    System.out.println("Invalid input! Please enter non-negative number.");
+                    continue;
+                }
+
                 return input;
             }catch(InputMismatchException e){
                 System.out.println("Invalid input! Please enter a number.");
