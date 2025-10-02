@@ -1,6 +1,8 @@
 package co.uk.lset.payrollmanagement;
 
-public abstract class Employee implements Payable{
+import java.io.Serializable;
+
+public abstract class Employee implements Payable, Serializable {
     private final int ID;
     private final String name;
     private String department;

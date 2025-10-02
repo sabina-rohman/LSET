@@ -1,10 +1,10 @@
 package co.uk.lset.payrollmanagement;
 
+import java.io.*;
 import java.util.*;
 
 public class PayrollService {
-    //private static ArrayList<Employee> employees = new ArrayList<>();
-    private static final HashMap<Integer, Employee> employeesById= new HashMap<>();
+    private static final HashMap<Integer, Employee> employeesById = readEmployess();
     private static final Scanner scanner = new Scanner(System.in);
 
     private static final String BASIC_SALARY = "basic salary";
@@ -13,7 +13,11 @@ public class PayrollService {
     private static final String DEDUCTION = "deduction";
     private static final String HOURS_WORKED = "hours worked";
 
-    public static void main(String[] args) throws EmployeeNotFoundException {
+    public static void main(String[] args) {
+        performPayrollActions();
+    }
+
+    private static void performPayrollActions() {
         boolean isRunning = true;
 
         while(isRunning){
@@ -24,24 +28,39 @@ public class PayrollService {
 
             switch (choice){
                 case 1:
-                    //add employee
                     addEmployee();
                     break;
                 case 2:
-                    //update employee
-                    updateEmployee();
+                    try{
+                        updateEmployee();
+                    }catch (EmployeeNotFoundException e){
+                        System.out.println(e.getMessage());
+                    }
+
                     break;
                 case 3:
-                    //delete employee
-                    removeEmployee();
+                    try{
+                        removeEmployee();
+                    }catch (EmployeeNotFoundException e){
+                        System.out.println(e.getMessage());
+                    }
+
                     break;
                 case 4:
-                    //generate payslip
-                    generatePayslip();
+                    try{
+                       generatePayslip();
+                    }catch (EmployeeNotFoundException e){
+                        System.out.println(e.getMessage());
+                    }
+
                     break;
                 case 5:
-                    //search employee
-                    searchEmployeeById();
+                    try{
+                        searchEmployeeById();
+                    }catch (EmployeeNotFoundException e){
+                        System.out.println(e.getMessage());
+                    }
+
                     break;
                 case 6:
                     System.out.println("Goodbye!");
@@ -51,22 +70,24 @@ public class PayrollService {
                     System.out.println("Invalid number. Please enter option(1-6)");
             }
         }
+
+        writeEmployees();
         scanner.close();
     }
 
-    private static void searchEmployeeById() throws EmployeeNotFoundException {
+    private static void searchEmployeeById() throws EmployeeNotFoundException{
         System.out.println("Enter employee ID you want to search:");
         int employeeId = scanner.nextInt();
         scanner.nextLine();
 
-        if(!employeesById.containsKey(employeeId)){
+        if (!employeesById.containsKey(employeeId)) {
             throw new EmployeeNotFoundException("Employee with ID " + employeeId + " not found", null);
-        }else{
+        } else {
             System.out.println(employeesById.get(employeeId));
         }
     }
 
-    private static void generatePayslip() throws EmployeeNotFoundException {
+    private static void generatePayslip() throws EmployeeNotFoundException{
         System.out.println("Enter employee ID to generate payslip:");
         int employeeId = scanner.nextInt();
         scanner.nextLine();
@@ -78,10 +99,11 @@ public class PayrollService {
         }
     }
 
-    private static void removeEmployee() throws EmployeeNotFoundException {
+    private static void removeEmployee() throws EmployeeNotFoundException{
         System.out.println("Enter employee ID that you want to delete");
         int employeeIdToBeDeleted = scanner.nextInt();
         scanner.nextLine();
+
 
         if(!employeesById.containsKey(employeeIdToBeDeleted)){
             throw new EmployeeNotFoundException("Employee with ID " + employeeIdToBeDeleted + " not found", null);
@@ -89,9 +111,11 @@ public class PayrollService {
             employeesById.remove(employeeIdToBeDeleted);
             System.out.println("Employee removed!");
         }
+
+
     }
 
-    private static void updateEmployee() throws EmployeeNotFoundException {
+    private static void updateEmployee() throws EmployeeNotFoundException{
         int id = getAndValidateEmployeeId();
 
         if(!employeesById.containsKey(id)){
@@ -269,8 +293,6 @@ public class PayrollService {
         }
     }
 
-
-
     private static void displayOptions() {
         System.out.println("----Payroll management service----");
         System.out.println("Enter one of the following options (1-6)");
@@ -281,5 +303,42 @@ public class PayrollService {
         System.out.println("5. Search Employee");
         System.out.println("6. Exit");
         System.out.println("----------------------------------------");
+    }
+
+    @SuppressWarnings("unchecked")
+    private static HashMap<Integer, Employee> readEmployess(){
+        HashMap<Integer, Employee> employeesFromFile = new HashMap<>();
+        String path = "D:\\work\\LSET\\Read_Write\\Employees.dat";
+
+        try{
+            File employeeFile = new File(path);
+            if(!employeeFile.exists()){
+                employeeFile.createNewFile();
+                return employeesFromFile;
+            }
+
+            try(ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(path))){
+                employeesFromFile = (HashMap<Integer, Employee>) inputStream.readObject();
+
+                System.out.println("Employees loaded: " + employeesFromFile.size());
+            } catch (ClassNotFoundException e) {
+                System.out.println("Error while reading employees: " + e.getMessage());
+            }
+        } catch (IOException e) {
+            System.out.println("Error while reading employees: " + e.getMessage());
+        }
+
+        return employeesFromFile;
+    }
+
+    private static void writeEmployees(){
+        String path = "D:\\work\\LSET\\Read_Write\\Employees.dat";
+
+        try(ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(path))){
+            outputStream.writeObject(employeesById);
+            System.out.println("All employees saved!");
+        }catch (IOException e){
+            System.out.println("File not found: " + e.getMessage());
+        }
     }
 }
